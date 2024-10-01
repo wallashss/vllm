@@ -21,9 +21,11 @@ from vllm.engine.async_llm_engine import (
 from vllm.engine.multiprocessing import (ENGINE_DEAD_ERROR, IPC_DATA_EXT,
                                          IPC_HEALTH_EXT, IPC_INPUT_EXT,
                                          IPC_OUTPUT_EXT, RPC_REQUEST_T,
-                                         VLLM_RPC_SUCCESS_STR, RPCAbortRequest,
-                                         RPCError, RPCProcessRequest,
-                                         RPCStartupRequest, RPCStartupResponse,
+                                         VLLM_RPC_SUCCESS_STR,
+                                         MQEngineBatchError, MQEngineDeadError,
+                                         RPCAbortRequest, RPCError,
+                                         RPCProcessRequest, RPCStartupRequest,
+                                         RPCStartupResponse,
                                          RPCUProfileRequest)
 # yapf: enable
 from vllm.envs import VLLM_RPC_TIMEOUT
@@ -203,8 +205,23 @@ class MQLLMEngineClient:
                         self._errored_with = exception
 
                     if request_id is None:
+
                         for queue_i in tuple(self.output_queues.values()):
-                            queue_i.put_nowait(exception)
+
+                            msg = str("A batch generation failed. Inspect the "
+                                      "stacktrace to find the original error: "
+                                      f"{repr(exception)}")
+                            # If it is a runtime exception, we assume that
+                            # the engine is already dead, let's pass this
+                            # information ahead. Otherwise we just set as
+                            # batch error, and maybe the engine is still
+                            # up running.
+                            # For runtime exceptions vLLM process will
+                            # shutdown immediately.
+                            batch_error = MQEngineDeadError(msg) if isinstance(
+                                exception,
+                                RuntimeError) else MQEngineBatchError(msg)
+                            queue_i.put_nowait(batch_error)
                     else:
                         queue = self.output_queues.get(request_id)
                         if queue is not None:

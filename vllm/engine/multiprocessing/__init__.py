@@ -18,6 +18,12 @@ IPC_HEALTH_EXT = "_health_socket"
 IPC_DATA_EXT = "_data_socket"
 
 
+# Generic exception when the engine
+# fails to process a batch
+class MQEngineBatchError(Exception):
+    pass
+
+
 class MQEngineDeadError(RuntimeError):
     pass
 

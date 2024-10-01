@@ -8,7 +8,7 @@ from fastapi import FastAPI, Request, Response
 
 from vllm import envs
 from vllm.engine.async_llm_engine import AsyncEngineDeadError
-from vllm.engine.multiprocessing import MQEngineDeadError
+from vllm.engine.multiprocessing import MQEngineBatchError, MQEngineDeadError
 from vllm.logger import init_logger
 from vllm.utils import find_process_using_port
 
@@ -28,7 +28,7 @@ async def serve_http(app: FastAPI, **uvicorn_kwargs: Any):
 
     config = uvicorn.Config(app, **uvicorn_kwargs)
     server = uvicorn.Server(config)
-    _add_shutdown_handlers(app, server)
+    _add_exception_handles(app, server)
 
     loop = asyncio.get_running_loop()
 
@@ -58,8 +58,9 @@ async def serve_http(app: FastAPI, **uvicorn_kwargs: Any):
         return server.shutdown()
 
 
-def _add_shutdown_handlers(app: FastAPI, server: uvicorn.Server) -> None:
-    """Adds handlers for fatal errors that should crash the server"""
+def _add_exception_handles(app: FastAPI, server: uvicorn.Server) -> None:
+    """Adds handlers for custom errors that may crash the server or
+       improve the readability of the stacktrace"""
 
     @app.exception_handler(RuntimeError)
     async def runtime_error_handler(request: Request, __):
@@ -99,5 +100,14 @@ def _add_shutdown_handlers(app: FastAPI, server: uvicorn.Server) -> None:
             logger.fatal("MQLLMEngine is already dead, terminating server "
                          "process")
             server.should_exit = True
+
+        return Response(status_code=HTTPStatus.INTERNAL_SERVER_ERROR)
+
+    @app.exception_handler(MQEngineBatchError)
+    async def mq_engine_batch_error_handler(_, err):
+        """Log the error and pass an internal server error.
+        This error might be propagated to all requests of
+        a batch that failed to generate"""
+        logger.error("%s", repr(err))
 
         return Response(status_code=HTTPStatus.INTERNAL_SERVER_ERROR)

@@ -12,7 +12,7 @@ from tests.mq_llm_engine.utils import RemoteMQLLMEngine
 from vllm import SamplingParams
 from vllm.engine.arg_utils import AsyncEngineArgs
 from vllm.engine.llm_engine import LLMEngine
-from vllm.engine.multiprocessing import MQEngineDeadError
+from vllm.engine.multiprocessing import MQEngineBatchError, MQEngineDeadError
 from vllm.engine.multiprocessing.engine import MQLLMEngine
 from vllm.entrypoints.openai.api_server import build_async_engine_client
 from vllm.entrypoints.openai.cli_args import make_arg_parser
@@ -22,7 +22,7 @@ from vllm.utils import FlexibleArgumentParser
 
 MODEL = "google/gemma-1.1-2b-it"
 ENGINE_ARGS = AsyncEngineArgs(model=MODEL)
-RAISED_ERROR = KeyError
+RAISED_ERROR = MQEngineBatchError
 RAISED_VALUE = "foo"
 
 
@@ -164,7 +164,7 @@ async def test_failed_abort(tmp_socket):
                     sampling_params=SamplingParams(max_tokens=10),
                     request_id=uuid.uuid4()):
                 pass
-        assert "KeyError" in repr(execinfo.value)
+        assert "MQEngineBatchError" in repr(execinfo.value)
         assert client.errored
 
         # This should raise the original error.

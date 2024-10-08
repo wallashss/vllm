@@ -22,7 +22,7 @@ from vllm.utils import FlexibleArgumentParser
 
 MODEL = "google/gemma-1.1-2b-it"
 ENGINE_ARGS = AsyncEngineArgs(model=MODEL)
-RAISED_ERROR = MQEngineBatchError
+RAISED_ERROR = KeyError
 RAISED_VALUE = "foo"
 
 
@@ -60,7 +60,7 @@ async def test_evil_forward(tmp_socket):
         await client.check_health()
 
         # Throws an error in first forward pass.
-        with pytest.raises(RAISED_ERROR):
+        with pytest.raises(MQEngineBatchError):
             async for _ in client.generate(prompt="Hello my name is",
                                            sampling_params=SamplingParams(),
                                            request_id=uuid.uuid4()):
@@ -164,7 +164,8 @@ async def test_failed_abort(tmp_socket):
                     sampling_params=SamplingParams(max_tokens=10),
                     request_id=uuid.uuid4()):
                 pass
-        assert "MQEngineBatchError" in repr(execinfo.value)
+
+        assert "KeyError" in repr(execinfo.value)
         assert client.errored
 
         # This should raise the original error.

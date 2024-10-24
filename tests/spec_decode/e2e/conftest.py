@@ -154,6 +154,9 @@ def _check_logprobs_when_output_disabled(
          spec_pos_logprob) = next(iter(spec_pos_logprobs.items()))
         assert spec_pos_logprob.rank == -1
         assert spec_pos_logprob.logprob == 0.0
+        # FIXME shouldnt have a tensor here?
+        if not isinstance(spec_pos_logprob_token_id, int):
+            spec_pos_logprob_token_id = spec_pos_logprob_token_id.item()
         assert spec_pos_logprob_token_id in baseline_pos_logprobs
 
 

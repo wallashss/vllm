@@ -60,6 +60,10 @@ class MultiStepOutputProcessor(SequenceGroupOutputProcessor):
         for output in outputs:
             # Concatenate single-step prompt logprob processing results.
             assert isinstance(output, CompletionSequenceGroupOutput)
+            print(f"PROCESSING MULTI_STEP {seq_group.request_id=}")#, \n{output=}")
+            if output.prompt_logprobs is not None:
+                for plog in output.prompt_logprobs:
+                    print(plog)
             single_step_process_prompt_logprob(self, seq_group, output)
 
     @staticmethod

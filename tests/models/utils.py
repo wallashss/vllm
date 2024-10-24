@@ -166,7 +166,7 @@ def check_logprobs_close(
                         # If the seq 0 token's logprobs are not `None`,
                         # the seq 1 token's logprobs must not be `None`
                         assert logprobs_elem_1 is not None, fail_msg
-                        # Logprobs check: top-k token choices must be the same
+                    # Logprobs check: top-k token choices must be the same
                         assert (set(logprobs_elem_0.keys()) == set(
                             logprobs_elem_1.keys())), fail_msg
             else:

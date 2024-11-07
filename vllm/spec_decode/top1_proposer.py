@@ -68,7 +68,6 @@ class Top1Proposer(SpeculativeProposer):
             # in batch size list
             hidden_states = execute_model_req.previous_hidden_states
             if hidden_states is not None:
-                # NOTE check this out, only the hidden states for decodes are passed in!
                 hidden_states.prune(nonzero_proposal_len_seqs)
             nonzero_execute_model_req = ExecuteModelRequest(
                 seq_group_metadata_list=nonzero_proposal_len_seqs,

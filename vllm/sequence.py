@@ -1197,7 +1197,6 @@ class HiddenStates(msgspec.Struct, array_like=True,
         if self.seq_group_metadata_list is not None:
             assert len(self.seq_group_metadata_list) == len(self.hidden_states)
             self._seq_ids = get_all_seq_ids(self.seq_group_metadata_list)
-        print("HIDDEN STATE DIM", self.hidden_states.shape)
 
     @property
     def seq_ids(self) -> List[int]:

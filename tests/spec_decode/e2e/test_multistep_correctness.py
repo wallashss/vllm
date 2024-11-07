@@ -79,7 +79,7 @@ from .conftest import (get_output_from_llm_generator,
         },
     ])
 @pytest.mark.parametrize("test_llm_kwargs", [{}])
-@pytest.mark.parametrize("batch_size", [2, 32])
+@pytest.mark.parametrize("batch_size", [1, 32])
 @pytest.mark.parametrize("seed", [1])
 @fork_new_process_for_each_test
 def test_spec_decode_e2e_with_detokenization(test_llm_generator,
@@ -143,9 +143,6 @@ def test_spec_decode_e2e_with_detokenization(test_llm_generator,
         # Note that one is equal to the draft model, another isn't.
         {
             "model_name": "JackFram/llama-68m",
-            # "enable_chunked_prefill": True,
-            # "max_num_batched_tokens": 4,
-            # "max_num_seqs": 4
         },
         {
             "model_name": "JackFram/llama-160m",
@@ -163,9 +160,6 @@ def test_spec_decode_e2e_with_detokenization(test_llm_generator,
         "speculative_model": "JackFram/llama-68m",
         "num_speculative_tokens": 3,
         "enable_chunked_prefill": True,
-        # TODO test with #prompt>>k
-        # "max_num_batched_tokens": 12,
-        # "max_num_seqs": 12,
         "max_num_batched_tokens": 4,
         "max_num_seqs": 4,
         "disable_logprobs_during_spec_decoding": False
@@ -177,7 +171,7 @@ def test_spec_decode_e2e_with_detokenization(test_llm_generator,
         # Use long output len for the small model test.
         10,
     ])
-@pytest.mark.parametrize("batch_size", [4])
+@pytest.mark.parametrize("batch_size", [1])
 @pytest.mark.parametrize("seed", [1])
 @fork_new_process_for_each_test
 def test_spec_decode_e2e_greedy_correctness_tiny_model_bs1(

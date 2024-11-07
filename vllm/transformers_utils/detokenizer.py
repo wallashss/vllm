@@ -41,26 +41,15 @@ class Detokenizer:
         seq = seq_group.get_seqs()[0]
         # Only prompt, without the generated token.
         all_token_ids = seq.get_token_ids()
-        # TODO you do NOT always have a generated token here non-terminal chunk
-        # these are actually hte tokens of the entire prompt so it should be ok 
-        # Request 1 prompt tokens: (1, 450, 6673, 310, 278, 3303, 3900, 338)
-        # Request 1 chunk tokens: (1, 450)
-        # SEQ GROUP 1
-        # all_token_ids: [1, 450, 6673, 310, 278, 3303, 3900, 338]
-        # prompt_token_ids: [1, 450, 6673, 310, 278, 3303, 3900] 338 it's still prompt though isnt it??
         prompt_token_ids = all_token_ids[:-1] 
         tokenizer = self.get_tokenizer_for_seq(seq)
-        # TODO it appears smt is off for terminal chunks, when prefll only route is chosen..?
         prefix_offset = 0
         read_offset = 0
         next_iter_prefix_offset = 0
         next_iter_read_offset = 0
         next_iter_tokens: List[str] = []
         prev_tokens = None
-        # NOTE when len(prompt_logprobs) < len(all_token_ids) this is a chunk! OR for chunk BUT the first, position_offset>0
-        print("TOKENS RECEIVED", all_token_ids)
-        print("POSITION OFFSET FOR CHUNK", position_offset)
-        print("Seq data comp tokens", seq.data._num_computed_tokens, 'out tok', seq.data.get_output_token_ids())
+
         for token_position_in_logprob, prompt_logprobs_for_token in enumerate(
                 prompt_logprobs):
 
@@ -73,8 +62,6 @@ class Detokenizer:
             for token_id, sample_logprob in prompt_logprobs_for_token.items():
                 if (sample_logprob.decoded_token is None
                         and token_id != VLLM_INVALID_TOKEN_ID):
-                    # TODO uuuuhh I see, we're kinda expected to append the sequence of plogs chunks together so we can read the actual pos here..
-                    # but like how I thought this was done in single_step?
                     prompt_token_ids_with_token = (
                         prompt_token_ids[:token_position] + [token_id])
                     (new_tokens, new_text, new_prefix_offset,

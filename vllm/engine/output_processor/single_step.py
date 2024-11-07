@@ -48,7 +48,7 @@ def single_step_process_prompt_logprob(
                 seq_group,
                 prompt_logprobs,
                 position_offset=len(seq_group.prompt_logprobs))
-        # The second chunk should get this appended so it doesnt add None no more!!
+
         seq_group.prompt_logprobs.extend(prompt_logprobs)
 
 

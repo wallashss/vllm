@@ -332,11 +332,6 @@ class LocalOrDistributedWorkerBase(WorkerBase):
             num_steps=num_steps,
             **kwargs,
         )
-                
-        # import pickle
-        # with open('data_original_cp.pkl', 'ab') as f:
-        #     new_data = {sg.request_id:o.prompt_logprobs for sg, o in zip(execute_model_req.seq_group_metadata_list, output[0].outputs) if sg.is_prompt}
-        #     pickle.dump(new_data, f)
 
         model_execute_time = time.perf_counter() - start_time
         if not get_pp_group().is_last_rank:

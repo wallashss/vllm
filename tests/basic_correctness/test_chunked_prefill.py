@@ -53,8 +53,8 @@ def test_models(
     max_num_seqs = chunked_prefill_token_size
     max_num_batched_tokens = chunked_prefill_token_size
 
-    # with hf_runner(model, dtype=dtype) as hf_model:
-        # hf_outputs = hf_model.generate_greedy(example_prompts, max_tokens)
+    with hf_runner(model, dtype=dtype) as hf_model:
+        hf_outputs = hf_model.generate_greedy(example_prompts, max_tokens)
 
     with vllm_runner(
             model,
@@ -64,7 +64,6 @@ def test_models(
             tensor_parallel_size=tensor_parallel_size,
             enforce_eager=enforce_eager,
             max_num_seqs=max_num_seqs,
-            prompt_logprobs=2
     ) as vllm_model:
         vllm_outputs = vllm_model.generate_greedy(example_prompts, max_tokens)
 

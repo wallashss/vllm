@@ -593,7 +593,6 @@ class SpecDecodeWorker(LoraNotSupportedWorkerBase):
             # TODO Enable `return_hidden_states`: prefill chunks hidden states
             # are pruned by the logits processor. Also, they should be arranged
             # back into full-prefill latent. Address it to enable MLPSpeculator.
-            print(f"RUN NO SPEC {hidden_states.shape=}")
             new_sg = [sg for sg in execute_model_req.seq_group_metadata_list if sg.do_sample and sg.is_prompt]
             if any(seq.is_prompt and seq.do_sample
                    for seq in execute_model_req.seq_group_metadata_list):
@@ -619,7 +618,6 @@ class SpecDecodeWorker(LoraNotSupportedWorkerBase):
 
             self.proposer_worker.execute_model(execute_model_req)
 
-        print("RUN NO SPEC LOGPROBS", [o.prompt_logprobs for o in sampler_output.outputs])
         sampler_output_to_return = (self._serialize_sampler_output_no_logprobs(
             execute_model_req=execute_model_req, sampler_output=sampler_output)
                                     if self._disable_logprobs else
@@ -811,10 +809,7 @@ class SpecDecodeWorker(LoraNotSupportedWorkerBase):
         accepted_token_ids[original_indices] = accepted_token_ids.clone()
 
         # B x K+1 x D
-        # TODO should this have non-terminal chunks removed already?
         hidden_states = proposal_scores.hidden_states
-        print("Scorer next hidden state", hidden_states.shape)
-        print("TOKENS", accepted_token_ids)
         if hidden_states is not None:
             # Only get terminal hidden states for next step
             terminal_metadata = [sg for sg in seq_group_metadata_list if sg.do_sample]
@@ -824,10 +819,8 @@ class SpecDecodeWorker(LoraNotSupportedWorkerBase):
             accepted_index = accepted_token_ids + 1  # Convert -1 to 0
             accepted_index = accepted_index.count_nonzero(dim=1).add_(-1) # b
             # Drop non-terminal prefill chunks hidden states.
-            print("assert check", len(accepted_index), hidden_states.shape)
             hidden_states = hidden_states[accepted_index!=VLLM_INVALID_TOKEN_ID]
             accepted_index = accepted_index[accepted_index!=VLLM_INVALID_TOKEN_ID]
-            print("assert check", len(accepted_index), hidden_states.shape)
             assert len(accepted_index) == hidden_states.shape[0] == len(terminal_metadata)
             index = accepted_index[:, None, None].expand(-1, 1, hs_size) # b x 1 x d
             second_last_token_hidden_states = hidden_states[:, -2]  # b x d

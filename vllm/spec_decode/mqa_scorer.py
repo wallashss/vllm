@@ -95,8 +95,6 @@ class MQAScorer(SpeculativeScorer):
                                                     fill_value=-float("inf"))
             target_token_ids = target_token_ids.flatten()
             
-            print("RECEIVED TOKENS", target_token_ids)
-            print("RECEIVED PROBS", target_logprobs.shape)
             # When prompt logprobs is enabled, lens of returned tensors go from 
             # n_sampled (requests with do_sample=True) to n_prompt+n_prefills.
             # We adjust stride accordingly to get the generated tokens and 
@@ -138,11 +136,9 @@ class MQAScorer(SpeculativeScorer):
                     i, :output_len] = target_logprobs[start_loc:end_loc]
                 start_loc = end_loc
                 i += 1
-        print("Final tokens", all_tokens)
 
         hidden_states = None
         if target_sampler_output.hidden_states is not None:
-            print(f"MQA SCORER {target_sampler_output.hidden_states.shape}")
             hidden_states = target_sampler_output.hidden_states.reshape(
                 bs, (k + 1), -1)
 

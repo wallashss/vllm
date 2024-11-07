@@ -37,8 +37,6 @@ def single_step_process_prompt_logprob(
     # prompt logprobs during prefill since the token at idx 0 will not
     # have a logprob associated with it.
     if prompt_logprobs is not None:
-        print("SINGLE STEP SEQ GROUP", seq_group.request_id)#, f'{seq_group.prompt_logprobs}=')
-        # print(output)
         if not seq_group.prompt_logprobs:
             prompt_logprobs = [None] + prompt_logprobs
             seq_group.prompt_logprobs = []

@@ -1167,6 +1167,8 @@ class LLMEngine:
                     seq_group.update_num_computed_tokens(
                         seq_group_meta.token_chunk_size or 0)
 
+            # TODO: Why this metrics collection is happening
+            # in a loop over indices
             if outputs:
                 for o in outputs:
                     if (isinstance(o, SamplerOutput)

@@ -446,7 +446,7 @@ class SpecDecodeWorker(LoraNotSupportedWorkerBase):
         self._maybe_disable_speculative_tokens(
             disable_all_speculation, execute_model_req.seq_group_metadata_list)
 
-        print("REQUEST", [(sg.is_prompt, sg.token_chunk_size, sg.do_sample) for sg in execute_model_req.seq_group_metadata_list])
+        print("REQUEST", [(sg.request_id, sg.is_prompt, sg.token_chunk_size, sg.do_sample) for sg in execute_model_req.seq_group_metadata_list])
         print("IS FIRST CHUNK", [list(sg.seq_data.values())[0]._num_computed_tokens==0 for sg in execute_model_req.seq_group_metadata_list if sg.is_prompt])
         for sg in execute_model_req.seq_group_metadata_list:
             if sg.is_prompt:
@@ -454,8 +454,10 @@ class SpecDecodeWorker(LoraNotSupportedWorkerBase):
                 print(f"Request {sg.request_id} prompt tokens: {data.prompt_token_ids}")
                 print(f"Request {sg.request_id} chunk tokens: {data.prompt_token_ids[data._num_computed_tokens:data._num_computed_tokens+sg.token_chunk_size]}")
         if no_spec:
+            print("self._run_no_spec")
             return self._run_no_spec(execute_model_req,
                                      skip_proposer=disable_all_speculation)
+        print("self._run_speculative_decoding_step")
         return self._run_speculative_decoding_step(execute_model_req,
                                                    num_lookahead_slots)
 
@@ -557,6 +559,7 @@ class SpecDecodeWorker(LoraNotSupportedWorkerBase):
                     ]
                 else:
                     prompt_logprobs = None
+                    
                 completion_seq_group_output_list.append(
                     create_sequence_group_output(
                         token_id=sampled_token_ids_list[output_index][0],
@@ -904,7 +907,7 @@ class SpecDecodeWorker(LoraNotSupportedWorkerBase):
             # Terminal chunk, has token.
             if sg.do_sample:
                 kwargs.update(dict(
-                        token_id=accepted_token_ids[i][0],
+                        token_id=accepted_token_ids[i][0].item(),
                         token_id_logprob_rank=accepted_token_id_ranks_by_step[0][i],
                         token_id_logprob=accepted_token_id_logprobs_by_step[0][i],
                         topk_token_ids=topk_indices_by_step[0][i][:num_logprobs],

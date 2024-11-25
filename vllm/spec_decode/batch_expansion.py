@@ -192,7 +192,7 @@ class BatchExpansionTop1Scorer(SpeculativeScorer):
             if contracted_seq_group_metadata_list[idx].do_sample
         ]
         has_prompt_log = any(((sg.sampling_params.prompt_logprobs and sg.sampling_params.prompt_logprobs>0) for sg in contracted_seq_group_metadata_list))
-        # When prompt logprobs is enabled, lens of returned tensors go from 
+        # When prompt logprobs is enabled, lengths of returned tensors go from 
         # n_sampled (requests with do_sample=True) to n_prompt+n_prefills.
         # We adjust stride accordingly to get the generated tokens and 
         # their probs, but pass on prompt_logprobs as is.
@@ -209,7 +209,7 @@ class BatchExpansionTop1Scorer(SpeculativeScorer):
                 nospec_sampled_token_idxs = torch.cumsum(nospec_sizes, 0).add_(-1)
             else:
                 # In this case only sampled tokens are returned, select all.
-                nospec_sampled_token_idxs = list(range(non_spec_target_token_ids))
+                nospec_sampled_token_idxs = list(range(len(non_spec_target_token_ids)))
 
             all_tokens[non_spec_indices, :1] = \
                 non_spec_target_token_ids[nospec_sampled_token_idxs].unsqueeze(1)

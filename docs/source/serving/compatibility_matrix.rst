@@ -113,7 +113,7 @@ Feature x Feature
      - 
      - 
    * - :ref:`SD <spec_decode>`
-     - ✗
+     - ✅
      - ✅
      - ✗
      - ✅
@@ -181,7 +181,7 @@ Feature x Feature
      - ✅
      - ✅
      - ✅
-     - `✗ <https://github.com/vllm-project/vllm/pull/8199>`__ 
+     - ✅
      - ✅
      - ✅
      - ✅

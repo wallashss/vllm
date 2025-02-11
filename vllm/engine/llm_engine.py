@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import copy
+import json
 import time
 from collections import Counter as collectionsCounter
 from collections import deque
@@ -29,6 +30,7 @@ from vllm.engine.output_processor.stop_checker import StopChecker
 from vllm.engine.output_processor.util import create_output_by_sequence_group
 from vllm.entrypoints.openai.logits_processors import (
     get_logits_processors as get_openai_logits_processors)
+from vllm.error_report import dump_engine_exception
 from vllm.executor.executor_base import ExecutorBase
 from vllm.inputs import (INPUT_REGISTRY, InputRegistry, ProcessorInputs,
                          PromptType, SingletonInputsAdapter)
@@ -1383,8 +1385,24 @@ class LLMEngine:
                 execute_model_req.async_callback = self.async_callbacks[
                     virtual_engine]
 
-            outputs = self.model_executor.execute_model(
-                execute_model_req=execute_model_req)
+            try:
+                outputs = self.model_executor.execute_model(
+                    execute_model_req=execute_model_req)
+
+                for r in execute_model_req.seq_group_metadata_list:
+                    if r.sampling_params and r.sampling_params.max_tokens == 123:
+                        raise RuntimeError("OR NO!")
+
+            except BaseException as err:
+
+                dump_engine_exception(
+                    err=err,
+                    config=self.vllm_config,
+                    execute_model_req=execute_model_req,
+                    use_cached_outputs=self.use_cached_outputs,
+                    engine_version=0)
+                # Re-raise exception
+                raise err
 
             # We need to do this here so that last step's sampled_token_ids can
             # be passed to the next iteration for PP.

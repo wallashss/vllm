@@ -1650,6 +1650,13 @@ class ModelRunner(GPUModelRunnerBase[ModelInputForGPUWithSamplingMetadata]):
         intermediate_tensors: Optional[IntermediateTensors] = None,
         num_steps: int = 1,
     ) -> Optional[Union[List[SamplerOutput], IntermediateTensors]]:
+        # print(model_input)
+        print("__________________")
+        print(model_input.attn_metadata)
+
+        print('model_input.query_lens', model_input.query_lens)
+        if len(model_input.query_lens) == 4:
+            raise Exception("CRASH!!!")
         if num_steps > 1:
             raise ValueError("num_steps > 1 is not supported in ModelRunner")
 

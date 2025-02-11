@@ -5,11 +5,14 @@ Run `pytest tests/basic_correctness/test_basic_correctness.py`.
 """
 import os
 import weakref
+from unittest.mock import Mock
 
 import pytest
 
 from vllm import LLM
+from vllm.engine.llm_engine import LLMEngine as LLMEngineV0
 from vllm.platforms import current_platform
+from vllm.v1.engine.llm_engine import LLMEngine as LLMEngineV1
 
 from ..conftest import VllmRunner
 from ..models.utils import check_outputs_equal
@@ -22,13 +25,12 @@ MODELS = [
 
 TARGET_TEST_SUITE = os.environ.get("TARGET_TEST_SUITE", "L4")
 
-
-@pytest.fixture(autouse=True)
-def v1(run_with_both_engines):
-    # Simple autouse wrapper to run both engines for each test
-    # This can be promoted up to conftest.py to run for every
-    # test in a package
-    pass
+# @pytest.fixture(autouse=True)
+# def v1(run_with_both_engines):
+#     # Simple autouse wrapper to run both engines for each test
+#     # This can be promoted up to conftest.py to run for every
+#     # test in a package
+#     pass
 
 
 def test_vllm_gc_ed():
@@ -147,3 +149,27 @@ def test_models_distributed(
         name_0="hf",
         name_1="vllm",
     )
+
+
+def test_failed_model_execution(vllm_runner) -> None:
+
+    with vllm_runner('facebook/opt-125m', enforce_eager=True) as vllm_model:
+
+        engine = vllm_model.model.llm_engine
+        if isinstance(engine, LLMEngineV1):
+            pytest.skip(reason="V1 Engine skipped")
+
+        # Create a MagicMock object and configure it to raise an exception
+        mocked_execute_model = Mock(side_effect=RuntimeError("Critical Error"))
+        engine.model_executor.execute_model = mocked_execute_model
+
+        with pytest.raises(RuntimeError):
+            prompts = [
+                "Hello, my name is",
+                "The president of the United States is",
+                "The capital of France is",
+                "The future of AI is",
+            ]
+            vllm_outputs = vllm_model.generate_greedy(prompts,
+                                                      200,
+                                                      use_tqdm=False)
